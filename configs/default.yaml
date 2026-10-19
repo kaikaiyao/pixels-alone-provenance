@@ -1,0 +1,337 @@
+experiment:
+  seed: 20260327
+  total_images: 1200
+  split_counts:
+    train: 600
+    val: 300
+    test: 300
+  smoke_counts:
+    train: 100
+    val: 50
+    test: 50
+
+paths:
+  workspace_root: "."
+  artifacts_root: "artifacts"
+  dataset_manifest: "artifacts/generated/dataset_manifest.csv"
+  smoke_manifest: "artifacts/generated/dataset_manifest_smoke.csv"
+  d1_checkpoint: "artifacts/generated/d1_clip3.pt"
+  d1_adv_checkpoint: "artifacts/generated/d1_clip3_advtrain.pt"
+  clean_metrics: "artifacts/generated/d1_clean_metrics.json"
+  clean_predictions: "artifacts/generated/d1_clean_predictions.csv"
+  d1_adv_clean_metrics: "artifacts/generated/d1_adv_clean_metrics.json"
+  d1_adv_clean_predictions: "artifacts/generated/d1_adv_clean_predictions.csv"
+  attack_results: "artifacts/generated/d1_attack_results.csv"
+  attack_summary: "artifacts/generated/d1_attack_summary.json"
+  d1_adv_attack_results: "artifacts/generated/d1_adv_attack_results.csv"
+  d1_adv_attack_summary: "artifacts/generated/d1_adv_attack_summary.json"
+  exact_recovery_metrics: "artifacts/generated/exact_recovery_metrics.json"
+  exact_recovery_results: "artifacts/generated/exact_recovery_results.csv"
+
+benchmarks:
+  b0:
+    label_space: ["real", "sd15", "sdxl"]
+    generator_ids: ["sd15", "sdxl"]
+    legacy_triplet_export: true
+  b1:
+    label_space: ["real", "sd15", "sdxl", "sd21", "pixart"]
+    generator_ids: ["sd15", "sdxl", "sd21", "pixart"]
+    generator_benchmark_overrides:
+      sd15: b0
+      sdxl: b0
+    legacy_triplet_export: false
+
+data:
+  coco_root: "data/coco2017"
+  real_output_dir: "artifacts/datasets/triplets/real"
+  generated_output_dir: "artifacts/datasets/triplets/generated"
+  image_size: 512
+  clip_input_size: 224
+  clip_mean: [0.48145466, 0.4578275, 0.40821073]
+  clip_std: [0.26862954, 0.26130258, 0.27577711]
+  caption_policy: "lowest_annotation_id"
+
+generation:
+  sd15_model_id: "runwayml/stable-diffusion-v1-5"
+  sdxl_model_id: "stabilityai/stable-diffusion-xl-base-1.0"
+  width: 512
+  height: 512
+  sd15_steps: 30
+  sd15_guidance_scale: 7.5
+  sd15_variant: ""
+  sd15_use_safetensors: false
+  sdxl_steps: 30
+  sdxl_guidance_scale: 5.0
+  sdxl_variant: "fp16"
+  sdxl_use_safetensors: true
+  torch_dtype: "float16"
+  models:
+    sd15:
+      model_id: "runwayml/stable-diffusion-v1-5"
+      steps: 30
+      guidance_scale: 7.5
+      variant: ""
+      use_safetensors: false
+      width: 512
+      height: 512
+    sdxl:
+      model_id: "stabilityai/stable-diffusion-xl-base-1.0"
+      steps: 30
+      guidance_scale: 5.0
+      variant: "fp16"
+      use_safetensors: true
+      width: 512
+      height: 512
+    sd21:
+      model_id: "sd2-community/stable-diffusion-2-1"
+      steps: 30
+      guidance_scale: 7.5
+      variant: "fp16"
+      use_safetensors: true
+      width: 512
+      height: 512
+    pixart:
+      model_id: "PixArt-alpha/PixArt-XL-2-512x512"
+      steps: 20
+      guidance_scale: 4.5
+      variant: ""
+      use_safetensors: true
+      width: 512
+      height: 512
+
+d1:
+  clip_model_name: "ViT-B-32"
+  clip_pretrained: "openai"
+  batch_size: 32
+  epochs: 12
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  checkpoint_path: "artifacts/generated/d1_clip3.pt"
+  adversarial_training:
+    enabled: false
+    batch_size: 16
+    eps: 0.03137254901960784
+    steps: 3
+    step_size: 0.00784313725490196
+    restarts: 1
+    clean_weight: 0.5
+    adv_weight: 0.5
+
+feature_cache:
+  batch_size: 32
+  num_workers: 8
+  pin_memory: true
+
+verifiers:
+  d1_softmax:
+    benchmark_id: "b0"
+    family: "clip_public_linear"
+    head_type: "softmax_linear"
+    class_names: ["real", "sd15", "sdxl"]
+    differentiable: true
+    score_revealing: true
+    public_encoder: true
+  b0_binary_logistic:
+    benchmark_id: "b0"
+    family: "clip_public_linear"
+    head_type: "binary_logistic"
+    class_names: ["real", "fake"]
+    differentiable: true
+    score_revealing: true
+    public_encoder: true
+  b0_ovr_logistic:
+    benchmark_id: "b0"
+    family: "clip_public_linear"
+    head_type: "ovr_logistic"
+    class_names: ["real", "sd15", "sdxl"]
+    differentiable: true
+    score_revealing: false
+    public_encoder: true
+  b0_temp_softmax:
+    benchmark_id: "b0"
+    family: "clip_public_linear"
+    head_type: "temperature_scaled_softmax"
+    class_names: ["real", "sd15", "sdxl"]
+    differentiable: true
+    score_revealing: true
+    public_encoder: true
+  b0_intercept_softmax:
+    benchmark_id: "b0"
+    family: "clip_public_linear"
+    head_type: "intercept_augmented_softmax"
+    class_names: ["real", "sd15", "sdxl"]
+    differentiable: true
+    score_revealing: true
+    public_encoder: true
+  b0_mlp:
+    benchmark_id: "b0"
+    family: "clip_public_nonlinear"
+    head_type: "mlp_gelu"
+    class_names: ["real", "sd15", "sdxl"]
+    differentiable: true
+    score_revealing: false
+    public_encoder: true
+  b1_softmax:
+    benchmark_id: "b1"
+    family: "clip_public_linear"
+    head_type: "softmax_linear"
+    class_names: ["real", "sd15", "sdxl", "sd21", "pixart"]
+    differentiable: true
+    score_revealing: true
+    public_encoder: true
+  b1_binary_logistic:
+    benchmark_id: "b1"
+    family: "clip_public_linear"
+    head_type: "binary_logistic"
+    class_names: ["real", "fake"]
+    differentiable: true
+    score_revealing: true
+    public_encoder: true
+  b1_ovr_logistic:
+    benchmark_id: "b1"
+    family: "clip_public_linear"
+    head_type: "ovr_logistic"
+    class_names: ["real", "sd15", "sdxl", "sd21", "pixart"]
+    differentiable: true
+    score_revealing: false
+    public_encoder: true
+  b1_temp_softmax:
+    benchmark_id: "b1"
+    family: "clip_public_linear"
+    head_type: "temperature_scaled_softmax"
+    class_names: ["real", "sd15", "sdxl", "sd21", "pixart"]
+    differentiable: true
+    score_revealing: true
+    public_encoder: true
+  b1_intercept_softmax:
+    benchmark_id: "b1"
+    family: "clip_public_linear"
+    head_type: "intercept_augmented_softmax"
+    class_names: ["real", "sd15", "sdxl", "sd21", "pixart"]
+    differentiable: true
+    score_revealing: true
+    public_encoder: true
+  b1_mlp:
+    benchmark_id: "b1"
+    family: "clip_public_nonlinear"
+    head_type: "mlp_gelu"
+    class_names: ["real", "sd15", "sdxl", "sd21", "pixart"]
+    differentiable: true
+    score_revealing: false
+    public_encoder: true
+  cnnspot:
+    benchmark_id: "b1"
+    family: "external_detector"
+    head_type: "cnnspot"
+    class_names: ["real", "fake"]
+    differentiable: false
+    score_revealing: false
+    public_encoder: false
+  dire:
+    benchmark_id: "b1"
+    family: "external_detector"
+    head_type: "dire"
+    class_names: ["real", "fake"]
+    differentiable: false
+    score_revealing: false
+    public_encoder: false
+  clip_detector:
+    benchmark_id: "b1"
+    family: "external_detector"
+    head_type: "clip_detector"
+    class_names: ["real", "fake"]
+    differentiable: false
+    score_revealing: false
+    public_encoder: false
+
+interfaces:
+  full_vector:
+    kind: "full_probability_vector"
+  fake_score:
+    kind: "single_target_score"
+  fake_score_q8:
+    kind: "quantized_target_score"
+    quantization_bits: 8
+  top1:
+    kind: "top1_label"
+  binary:
+    kind: "binary_accept_reject"
+  binary_budget_128:
+    kind: "binary_accept_reject"
+    rate_limit: 128
+  binary_budget_512:
+    kind: "binary_accept_reject"
+    rate_limit: 512
+  binary_budget_2048:
+    kind: "binary_accept_reject"
+    rate_limit: 2048
+  binary_budget_7200:
+    kind: "binary_accept_reject"
+    rate_limit: 7200
+  binary_budget_128_abstain:
+    kind: "binary_accept_reject"
+    rate_limit: 128
+    abstention: true
+  binary_budget_512_abstain:
+    kind: "binary_accept_reject"
+    rate_limit: 512
+    abstention: true
+  binary_budget_2048_abstain:
+    kind: "binary_accept_reject"
+    rate_limit: 2048
+    abstention: true
+  binary_budget_7200_abstain:
+    kind: "binary_accept_reject"
+    rate_limit: 7200
+    abstention: true
+
+attacks:
+  batch_size: 8
+  epsilons: [0.00784313725490196, 0.01568627450980392, 0.03137254901960784]
+  epsilon_names: ["2_255", "4_255", "8_255"]
+  steps: 40
+  restarts: 5
+  mixture_pis: [0.0, 0.25, 0.5, 0.75, 1.0]
+
+exact_recovery:
+  anchor_index: 0
+  probe_multiplier: 3
+  query_counts: [128, 256, 512, 1024, 2048, 7200]
+
+emulator:
+  hidden_dim: 256
+  epochs: 30
+  learning_rate: 0.001
+
+external_detectors:
+  batch_size: 32
+  clip_model_name: "ViT-B-32"
+  clip_pretrained: "openai"
+  cnnspot:
+    weight_filename: "blur_jpg_prob0.5.pth"
+    weight_url: "https://www.dropbox.com/s/2g2jagq2jn1fd0i/blur_jpg_prob0.5.pth?dl=1"
+    resize_size: 256
+    crop_size: 224
+    batch_size: 32
+  dire:
+    arch: "resnet50"
+    weight_filename: "lsun_adm.pth"
+    weight_url: ""
+    resize_size: 256
+    crop_size: 224
+    aug_norm: true
+    batch_size: 32
+  clip_detector:
+    real_prompts:
+      - "a real photograph"
+      - "a genuine camera photo"
+      - "a natural unedited image"
+    fake_prompts:
+      - "an AI-generated image"
+      - "a synthetic diffusion image"
+      - "a fake computer-generated photo"
+
+random_search:
+  query_budgets: [128, 512, 2048, 7200]
+  search_steps: 64
+  search_batch_size: 16

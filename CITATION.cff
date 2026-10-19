@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this code, please cite the paper below."
+title: "Can Pixels Alone Reveal Image Origin? Minimax Limits and Learnable Interfaces for Passive Provenance"
+type: software
+authors:
+  - family-names: Yao
+    given-names: Kai
+repository-code: "https://github.com/kaikaiyao/pixels-alone-provenance"
+url: "https://openreview.net/forum?id=DQ0b1sTnB8"
+preferred-citation:
+  type: conference-paper
+  title: "Can Pixels Alone Reveal Image Origin? Minimax Limits and Learnable Interfaces for Passive Provenance"
+  authors:
+    - family-names: Yao
+      given-names: Kai
+  year: 2026
+  conference:
+    name: "Conference on Neural Information Processing Systems (NeurIPS 2026)"
+  url: "https://openreview.net/forum?id=DQ0b1sTnB8"
